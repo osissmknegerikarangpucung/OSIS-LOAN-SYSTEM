@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - OSIS Loan System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col justify-between py-6 px-4">
+
+  <!-- Main Dashboard Container -->
+  <main class="max-w-6xl w-full mx-auto my-auto">
+
+    <!-- Header / Navigasi Atas -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 bg-white p-6 rounded-2xl shadow-sm border border-slate-200/60">
+      <div>
+        <span class="inline-block bg-slate-100 text-slate-700 text-xs font-semibold px-3 py-1 rounded-full mb-1">
+          Panel Pengurus OSIS
+        </span>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-900">Dashboard Peminjaman Barang</h1>
+        <p class="text-xs text-slate-500 mt-0.5">Monitoring inventaris dan status peminjaman secara real-time</p>
+      </div>
+      <a href="index.html" class="text-sm font-semibold bg-blue-700 hover:bg-blue-800 text-white px-4 py-2.5 rounded-xl shadow-sm transition flex items-center gap-2">
+        <span>&larr;</span> Buka Portal Siswa
+      </a>
+    </div>
+
+    <!-- Ringkasan Status (Statistik Cards) -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/60">
+        <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">Total Transaksi</p>
+        <p id="stat-total" class="text-3xl font-bold text-slate-900 mt-1.5">0</p>
+      </div>
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/60 border-l-4 border-amber-500">
+        <p class="text-xs text-amber-600 font-semibold uppercase tracking-wider">Sedang Dipinjam</p>
+        <p id="stat-dipinjam" class="text-3xl font-bold text-amber-600 mt-1.5">0</p>
+      </div>
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/60 border-l-4 border-emerald-500">
+        <p class="text-xs text-emerald-600 font-semibold uppercase tracking-wider">Sudah Dikembalikan</p>
+        <p id="stat-kembali" class="text-3xl font-bold text-emerald-600 mt-1.5">0</p>
+      </div>
+    </div>
+
+    <!-- Tabel Riwayat Data -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
+      <div class="p-5 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <h2 class="font-bold text-base sm:text-lg text-slate-900">Daftar Riwayat Peminjaman</h2>
+        <input 
+          type="text" 
+          id="search-input" 
+          placeholder="Cari nama, kelas, atau barang..." 
+          class="w-full sm:w-80 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none"
+        >
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-sm">
+          <thead>
+            <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 text-xs uppercase tracking-wider">
+              <th class="p-4">Nama</th>
+              <th class="p-4">Kelas / Organisasi</th>
+              <th class="p-4">Barang</th>
+              <th class="p-4">Tgl Pinjam</th>
+              <th class="p-4">Tgl Kembali</th>
+              <th class="p-4">Status</th>
+              <th class="p-4 text-center">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="admin-table-body" class="divide-y divide-slate-100">
+            <tr><td colspan="7" class="p-8 text-center text-slate-400">Memuat data dari Firebase...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer Credit -->
+  <footer class="text-center py-4 px-4 text-xs text-slate-500">
+    <p class="font-semibold text-slate-600">Credit By OSIS SMK NEKA - AROFAH ALHIDAYAH</p>
+  </footer>
+
+  <!-- Firebase SDK & Admin Script -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, deleteDoc, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    // Konfigurasi Firebase Project: osisloansystem
+    const firebaseConfig = {
+      apiKey: "AIzaSyBRBNCY59NxyznfI15xMvUv8E-mqIzvrjA",
+      authDomain: "osisloansystem.firebaseapp.com",
+      projectId: "osisloansystem",
+      storageBucket: "osisloansystem.firebasestorage.app",
+      messagingSenderId: "113166252286",
+      appId: "1:113166252286:web:2f0dd1d644bd6960ac4daf",
+      measurementId: "G-Y5V6FWTDJP"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const peminjamanRef = collection(db, "peminjaman");
+
+    let allRecords = [];
+
+    // Format Tanggal (YYYY-MM-DD ke DD/MM/YYYY)
+    function formatTanggal(dateStr) {
+      if (!dateStr) return "-";
+      const [y, m, d] = dateStr.split('-');
+      return `${d}/${m}/${y}`;
+    }
+
+    // Fungsi Hapus Data
+    window.hapusData = async (id, nama, barang) => {
+      if (confirm(`Yakin ingin menghapus riwayat peminjaman "${barang}" oleh ${nama}?`)) {
+        try {
+          await deleteDoc(doc(db, "peminjaman", id));
+          alert("✅ Data berhasil dihapus.");
+        } catch (err) {
+          alert("Gagal menghapus: " + err.message);
+        }
+      }
+    };
+
+    // Render Tabel ke HTML
+    function renderTable(records) {
+      const tableBody = document.getElementById('admin-table-body');
+      tableBody.innerHTML = "";
+
+      if (records.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-400">Tidak ada data ditemukan.</td></tr>';
+        return;
+      }
+
+      records.forEach((item) => {
+        const badge = item.status === "Dipinjam"
+          ? `<span class="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-semibold">Dipinjam</span>`
+          : `<span class="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-semibold">Dikembalikan</span>`;
+
+        const row = `
+          <tr class="hover:bg-slate-50/80 transition">
+            <td class="p-4 font-semibold text-slate-900">${item.nama}</td>
+            <td class="p-4 text-slate-600">${item.organisasi}</td>
+            <td class="p-4 font-medium text-slate-800">${item.barang}</td>
+            <td class="p-4 text-slate-600">${formatTanggal(item.tglPinjam)}</td>
+            <td class="p-4 text-slate-600">${formatTanggal(item.tglKembali)}</td>
+            <td class="p-4">${badge}</td>
+            <td class="p-4 text-center">
+              <button onclick="hapusData('${item.id}', '${item.nama}', '${item.barang}')" class="text-xs text-red-600 hover:bg-red-50 hover:text-red-700 font-medium px-3 py-1.5 rounded-lg border border-red-200 transition">
+                Hapus
+              </button>
+            </td>
+          </tr>
+        `;
+        tableBody.innerHTML += row;
+      });
+    }
+
+    // Real-time Listener dari Firestore
+    const q = query(peminjamanRef, orderBy("createdAt", "desc"));
+    onSnapshot(q, (snapshot) => {
+      allRecords = [];
+      let countDipinjam = 0;
+      let countKembali = 0;
+
+      snapshot.forEach((docSnap) => {
+        const data = { id: docSnap.id, ...docSnap.data() };
+        allRecords.push(data);
+        if (data.status === "Dipinjam") countDipinjam++;
+        else countKembali++;
+      });
+
+      // Update angka statistik
+      document.getElementById('stat-total').textContent = allRecords.length;
+      document.getElementById('stat-dipinjam').textContent = countDipinjam;
+      document.getElementById('stat-kembali').textContent = countKembali;
+
+      renderTable(allRecords);
+    });
+
+    // Fitur Pencarian Dinamis
+    document.getElementById('search-input').addEventListener('input', (e) => {
+      const keyword = e.target.value.toLowerCase();
+      const filtered = allRecords.filter(item =>
+        item.nama.toLowerCase().includes(keyword) ||
+        item.organisasi.toLowerCase().includes(keyword) ||
+        item.barang.toLowerCase().includes(keyword)
+      );
+      renderTable(filtered);
+    });
+  </script>
+</body>
+</html>
