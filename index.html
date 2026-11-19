@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OSIS Loan System - SMKN Karangpucung</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col justify-between py-6 px-4">
+
+  <!-- Main Content -->
+  <main class="max-w-xl w-full mx-auto my-auto">
+
+    <!-- 1. PORTAL UTAMA -->
+    <section id="page-portal" class="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-200/60">
+      <div class="text-center mb-6">
+        <span class="inline-block bg-blue-50 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full mb-2">
+          Inventaris & Logistik OSIS
+        </span>
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 leading-snug">
+          Selamat Datang di Web Peminjaman Barang OSIS SMKN Karangpucung
+        </h2>
+      </div>
+
+      <blockquote class="bg-amber-50/80 border-l-4 border-amber-500 p-4 rounded-r-xl mb-7 text-sm text-slate-700 italic leading-relaxed">
+        "Meminjam bukan sekadar meminta izin untuk menggunakan, tetapi menerima amanah untuk menjaga. Kembalikan tepat waktu, rawat dengan baik, dan jangan biarkan kepercayaan orang lain hilang karena kelalaian kita."
+      </blockquote>
+      
+      <div class="space-y-3.5">
+        <button onclick="showPage('pinjam')" class="w-full bg-blue-700 hover:bg-blue-800 active:scale-[0.99] text-white font-semibold py-4 px-6 rounded-xl shadow-sm transition flex items-center justify-center gap-2.5 text-base sm:text-lg">
+          <span>📤</span> Pinjam Barang
+        </button>
+        <button onclick="showPage('kembali')" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-semibold py-4 px-6 rounded-xl shadow-sm transition flex items-center justify-center gap-2.5 text-base sm:text-lg">
+          <span>📥</span> Kembalikan Barang
+        </button>
+      </div>
+    </section>
+
+    <!-- 2. FORM PEMINJAMAN -->
+    <section id="page-pinjam" class="hidden bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-200/60">
+      <button onclick="showPage('portal')" class="text-sm font-medium text-blue-700 hover:underline mb-4 inline-flex items-center gap-1">
+        &larr; Kembali ke Menu Utama
+      </button>
+      <h2 class="text-xl font-bold text-slate-900 mb-1">Form Peminjaman Barang</h2>
+      <p class="text-xs text-slate-500 mb-5">Isi data peminjaman secara lengkap sebelum membawa barang.</p>
+      
+      <form id="form-pinjam" class="space-y-4">
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1">1. Nama Peminjam</label>
+          <input type="text" id="pinjam-nama" required placeholder="Contoh: Arofah Al Hidayah" class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1">2. Kelas / Organisasi</label>
+          <input type="text" id="pinjam-kelas" required placeholder="Contoh: XI TITL 1 / OSIS" class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1">3. Nama Barang yang Dipinjam</label>
+          <input type="text" id="pinjam-barang" required placeholder="Contoh: Proyektor / Kabel Roll / Megaphone" class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none">
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-1">4. Tanggal Pinjam</label>
+            <input type="date" id="pinjam-tanggal" required class="w-full border border-slate-300 rounded-xl p-3 text-sm bg-slate-50">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-1">5. Jumlah Barang Dipinjam</label>
+            <input type="number" id="pinjam-jumlah" min="1" value="1" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none">
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1">6. Keterangan (Keperluan Peminjaman)</label>
+          <textarea id="pinjam-keterangan" rows="3" required placeholder="Contoh: Untuk kegiatan rapat OSIS / praktik kelas..." class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none"></textarea>
+        </div>
+        <button type="submit" id="btn-submit-pinjam" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-3.5 rounded-xl shadow-sm transition mt-2">
+          Kirim Data Peminjaman
+        </button>
+      </form>
+    </section>
+
+    <!-- 3. FORM PENGEMBALIAN (WAJIB FOTO BUKTI) -->
+    <section id="page-kembali" class="hidden bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-200/60">
+      <button onclick="showPage('portal')" class="text-sm font-medium text-emerald-700 hover:underline mb-4 inline-flex items-center gap-1">
+        &larr; Kembali ke Menu Utama
+      </button>
+      <h2 class="text-xl font-bold text-slate-900 mb-1">Form Pengembalian Barang</h2>
+      <p class="text-xs text-slate-500 mb-5">Wajib melampirkan foto kondisi barang sebagai bentuk integritas dan tanggung jawab.</p>
+      
+      <form id="form-kembali" class="space-y-4">
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1">Pilih Data Peminjaman Aktif</label>
+          <select id="kembali-select" required class="w-full border border-slate-300 rounded-xl p-3 text-sm bg-white focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 outline-none">
+            <option value="">Memuat daftar barang yang dipinjam...</option>
+          </select>
+          <p class="text-xs text-slate-400 mt-1.5">*Menampilkan Nama, Kelas/Organisasi, Barang, dan Jumlah yang belum dikembalikan.</p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1">Tanggal Kembali</label>
+          <input type="date" id="kembali-tanggal" required class="w-full border border-slate-300 rounded-xl p-3 text-sm bg-slate-50">
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1">Bukti Foto Kondisi Barang (Wajib)</label>
+          <input 
+            type="file" 
+            id="kembali-foto" 
+            accept="image/*" 
+            capture="environment" 
+            required 
+            class="w-full border border-slate-300 rounded-xl p-2.5 text-sm bg-white file:mr-3 file:py-2 file:px-3.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+          >
+          <p class="text-xs text-slate-500 mt-1">Ambil foto barang secara langsung atau pilih dari galeri (otomatis dikompres).</p>
+
+          <div id="foto-preview-wrapper" class="hidden mt-3">
+            <p class="text-xs font-semibold text-slate-600 mb-1.5">Preview Foto Barang:</p>
+            <img id="foto-preview" src="" alt="Preview Bukti Barang" class="w-full max-h-60 object-contain rounded-xl border border-slate-200 bg-slate-50">
+          </div>
+        </div>
+
+        <button type="submit" id="btn-submit-kembali" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3.5 rounded-xl shadow-sm transition mt-2">
+          Konfirmasi Pengembalian
+        </button>
+      </form>
+    </section>
+
+    <!-- 4. HALAMAN KONFIRMASI & CETAK BUKTI PDF -->
+    <section id="page-bukti" class="hidden bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-200/60 text-center">
+      <div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-2xl mx-auto mb-3">
+        ✓
+      </div>
+      <h2 id="bukti-title" class="text-xl font-bold text-slate-900 mb-1">Transaksi Berhasil Dicatat</h2>
+      <p id="bukti-subtitle" class="text-xs text-slate-500 mb-6">Silakan unduh atau cetak bukti PDF berikut sebagai arsip.</p>
+
+      <div id="bukti-ringkasan" class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-left text-sm space-y-2 mb-6"></div>
+
+      <div class="space-y-3">
+        <button id="btn-cetak-bukti" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3.5 px-5 rounded-xl shadow-sm transition flex items-center justify-center gap-2">
+          <span>📄</span> Cetak Bukti PDF
+        </button>
+        <button onclick="showPage('portal')" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold py-3 px-5 rounded-xl transition">
+          Kembali ke Menu Utama
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer Credit -->
+  <footer class="text-center py-4 px-4 text-xs text-slate-500">
+    <p class="font-semibold text-slate-600">Credit By OSIS SMK NEKA - AROFAH ALHIDAYAH</p>
+  </footer>
+
+  <!-- Firebase SDK & Script -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, updateDoc, doc, onSnapshot, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBRBNCY59NxyznfI15xMvUv8E-mqIzvrjA",
+      authDomain: "osisloansystem.firebaseapp.com",
+      projectId: "osisloansystem",
+      storageBucket: "osisloansystem.firebasestorage.app",
+      messagingSenderId: "113166252286",
+      appId: "1:113166252286:web:2f0dd1d644bd6960ac4daf",
+      measurementId: "G-Y5V6FWTDJP"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const peminjamanRef = collection(db, "peminjaman");
+
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('pinjam-tanggal').value = today;
+    document.getElementById('kembali-tanggal').value = today;
+
+    let activeLoansMap = {};
+    let lastReceiptData = null;
+    let compressedPhotoBase64 = "";
+
+    window.showPage = (pageId) => {
+      ['portal', 'pinjam', 'kembali', 'bukti'].forEach(id => {
+        document.getElementById(`page-${id}`).classList.add('hidden');
+      });
+      document.getElementById(`page-${pageId}`).classList.remove('hidden');
+    };
+
+    function formatTanggal(dateStr) {
+      if (!dateStr) return "-";
+      const [y, m, d] = dateStr.split('-');
+      return `${d}/${m}/${y}`;
+    }
+
+    // Kompres gambar agar ringan di Firestore & PDF
+    function compressImageFile(file, maxWidth = 640, quality = 0.65) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error("Gagal membaca file foto."));
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onerror = () => reject(new Error("Format gambar tidak valid."));
+          img.onload = () => {
+            let width = img.width;
+            let height = img.height;
+
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+
+            const canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const dataUrl = canvas.toDataURL("image/jpeg", quality);
+            resolve(dataUrl);
+          };
+          img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // Event listener saat memilih foto pengembalian
+    document.getElementById('kembali-foto').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      const previewWrapper = document.getElementById('foto-preview-wrapper');
+      const previewImg = document.getElementById('foto-preview');
+
+      if (!file) {
+        compressedPhotoBase64 = "";
+        previewWrapper.classList.add('hidden');
+        return;
+      }
+
+      try {
+        compressedPhotoBase64 = await compressImageFile(file);
+        previewImg.src = compressedPhotoBase64;
+        previewWrapper.classList.remove('hidden');
+      } catch (err) {
+        alert(err.message);
+        e.target.value = "";
+        compressedPhotoBase64 = "";
+        previewWrapper.classList.add('hidden');
+      }
+    });
+
+    function generateBuktiPDF(receipt) {
+      const { jsPDF } = window.jspdf;
+      const docPdf = new jsPDF();
+
+      const isPinjam = receipt.type === "pinjam";
+      const judulPDF = isPinjam
+        ? "PEMINJAMAN BARANG OSIS SMKN KARANGPUCUNG"
+        : "PENGEMBALIAN BARANG OSIS SMKN KARANGPUCUNG";
+
+      docPdf.setFont("helvetica", "bold");
+      docPdf.setFontSize(13);
+      docPdf.text(judulPDF, 105, 20, { align: "center" });
+
+      docPdf.setFont("helvetica", "normal");
+      docPdf.setFontSize(10);
+      docPdf.text("OSIS LOAN SYSTEM - INVENTARIS & LOGISTIK OSIS", 105, 27, { align: "center" });
+      docPdf.line(15, 32, 195, 32);
+
+      let yPos = 44;
+      const lineGap = 9.5;
+
+      const rows = [
+        ["Nama Peminjam", `: ${receipt.nama}`],
+        ["Kelas / Organisasi", `: ${receipt.organisasi}`],
+        ["Nama Barang", `: ${receipt.barang}`],
+        ["Jumlah Barang", `: ${receipt.jumlah} unit/buah`],
+        ["Tanggal Pinjam", `: ${formatTanggal(receipt.tglPinjam)}`],
+      ];
+
+      if (!isPinjam) {
+        rows.push(["Tanggal Kembali", `: ${formatTanggal(receipt.tglKembali)}`]);
+      }
+
+      rows.push(["Status", `: ${isPinjam ? "Dipinjam" : "Dikembalikan"}`]);
+      rows.push(["Keterangan", `: ${receipt.keterangan || "-"}`]);
+
+      docPdf.setFontSize(11);
+      rows.forEach(([label, val]) => {
+        docPdf.setFont("helvetica", "bold");
+        docPdf.text(label, 20, yPos);
+        docPdf.setFont("helvetica", "normal");
+        const wrapped = docPdf.splitTextToSize(val, 115);
+        docPdf.text(wrapped, 72, yPos);
+        yPos += lineGap * Math.max(1, wrapped.length);
+      });
+
+      // Jika pengembalian, lampirkan foto bukti pada PDF
+      if (!isPinjam && receipt.fotoKembali) {
+        yPos += 4;
+        docPdf.setFont("helvetica", "bold");
+        docPdf.setFontSize(10.5);
+        docPdf.text("Bukti Foto Kondisi Barang:", 20, yPos);
+        yPos += 4;
+
+        try {
+          docPdf.addImage(receipt.fotoKembali, "JPEG", 20, yPos, 70, 52);
+          yPos += 57;
+        } catch (e) {
+          docPdf.setFont("helvetica", "italic");
+          docPdf.setFontSize(9);
+          docPdf.text("(Foto terlampir pada sistem digital)", 20, yPos + 5);
+          yPos += 12;
+        }
+      }
+
+      yPos += 4;
+      if (yPos > 265) {
+        docPdf.addPage();
+        yPos = 20;
+      }
+
+      docPdf.line(15, yPos, 195, yPos);
+      yPos += 8;
+      docPdf.setFontSize(9);
+      docPdf.setFont("helvetica", "italic");
+      docPdf.text("Bukti ini sah sebagai catatan administrasi peminjaman/pengembalian barang OSIS.", 15, yPos);
+      yPos += 6;
+      docPdf.setFont("helvetica", "bold");
+      docPdf.text("Credit By OSIS SMK NEKA - AROFAH ALHIDAYAH", 15, yPos);
+
+      const fileName = isPinjam
+        ? `Bukti_Peminjaman_${receipt.nama.replace(/\s+/g, "_")}.pdf`
+        : `Bukti_Pengembalian_${receipt.nama.replace(/\s+/g, "_")}.pdf`;
+
+      docPdf.save(fileName);
+    }
+
+    function tampilkanHalamanBukti(receipt) {
+      lastReceiptData = receipt;
+      const isPinjam = receipt.type === "pinjam";
+
+      document.getElementById('bukti-title').textContent = isPinjam
+        ? "Peminjaman Barang Berhasil Dicatat"
+        : "Pengembalian Barang Berhasil Dikonfirmasi";
+
+      document.getElementById('bukti-subtitle').textContent = isPinjam
+        ? "Judul PDF: PEMINJAMAN BARANG OSIS SMKN KARANGPUCUNG"
+        : "Judul PDF: PENGEMBALIAN BARANG OSIS SMKN KARANGPUCUNG";
+
+      const fotoHtml = (!isPinjam && receipt.fotoKembali)
+        ? `<div class="pt-2">
+             <p class="font-semibold mb-1.5">Bukti Foto Barang:</p>
+             <img src="${receipt.fotoKembali}" alt="Bukti Foto" class="w-full max-h-48 object-contain rounded-lg border border-slate-200 bg-white">
+           </div>`
+        : "";
+
+      document.getElementById('bukti-ringkasan').innerHTML = `
+        <p><strong>Nama Peminjam:</strong> ${receipt.nama}</p>
+        <p><strong>Kelas / Organisasi:</strong> ${receipt.organisasi}</p>
+        <p><strong>Nama Barang:</strong> ${receipt.barang}</p>
+        <p><strong>Jumlah Barang:</strong> ${receipt.jumlah}</p>
+        <p><strong>Tanggal Pinjam:</strong> ${formatTanggal(receipt.tglPinjam)}</p>
+        ${!isPinjam ? `<p><strong>Tanggal Kembali:</strong> ${formatTanggal(receipt.tglKembali)}</p>` : ""}
+        <p><strong>Keterangan:</strong> ${receipt.keterangan || "-"}</p>
+        ${fotoHtml}
+      `;
+
+      showPage('bukti');
+    }
+
+    document.getElementById('btn-cetak-bukti').addEventListener('click', () => {
+      if (lastReceiptData) {
+        generateBuktiPDF(lastReceiptData);
+      }
+    });
+
+    // Submit Peminjaman
+    document.getElementById('form-pinjam').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btn-submit-pinjam');
+      btn.disabled = true;
+      btn.textContent = "Menyimpan data...";
+
+      const payload = {
+        nama: document.getElementById('pinjam-nama').value.trim(),
+        organisasi: document.getElementById('pinjam-kelas').value.trim(),
+        barang: document.getElementById('pinjam-barang').value.trim(),
+        tglPinjam: document.getElementById('pinjam-tanggal').value,
+        jumlah: Number(document.getElementById('pinjam-jumlah').value) || 1,
+        keterangan: document.getElementById('pinjam-keterangan').value.trim(),
+        tglKembali: "",
+        fotoKembali: "",
+        status: "Dipinjam",
+        createdAt: serverTimestamp()
+      };
+
+      try {
+        await addDoc(peminjamanRef, payload);
+        e.target.reset();
+        document.getElementById('pinjam-tanggal').value = today;
+        document.getElementById('pinjam-jumlah').value = 1;
+        tampilkanHalamanBukti({ type: "pinjam", ...payload });
+      } catch (err) {
+        alert("Gagal menyimpan: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Kirim Data Peminjaman";
+      }
+    });
+
+    // Load daftar barang berstatus "Dipinjam"
+    const qDipinjam = query(peminjamanRef, where("status", "==", "Dipinjam"));
+    onSnapshot(qDipinjam, (snapshot) => {
+      const selectKembali = document.getElementById('kembali-select');
+      selectKembali.innerHTML = '<option value="">-- Pilih Nama & Barang yang Dikembalikan --</option>';
+      activeLoansMap = {};
+
+      if (snapshot.empty) {
+        selectKembali.innerHTML = '<option value="">Tidak ada barang yang sedang dipinjam</option>';
+        return;
+      }
+
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        activeLoansMap[docSnap.id] = data;
+        const jml = data.jumlah || 1;
+        const opt = document.createElement('option');
+        opt.value = docSnap.id;
+        opt.textContent = `${data.nama} (${data.organisasi}) - ${data.barang} [${jml}x]`;
+        selectKembali.appendChild(opt);
+      });
+    });
+
+    // Submit Pengembalian (Wajib Foto)
+    document.getElementById('form-kembali').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const docId = document.getElementById('kembali-select').value;
+      if (!docId) return;
+
+      if (!compressedPhotoBase64) {
+        alert("⚠️ Wajib melampirkan foto kondisi barang saat pengembalian!");
+        return;
+      }
+
+      const btn = document.getElementById('btn-submit-kembali');
+      btn.disabled = true;
+      btn.textContent = "Memproses...";
+
+      const tglKembaliVal = document.getElementById('kembali-tanggal').value;
+      const loanOrigin = activeLoansMap[docId] || {};
+
+      try {
+        await updateDoc(doc(db, "peminjaman", docId), {
+          tglKembali: tglKembaliVal,
+          fotoKembali: compressedPhotoBase64,
+          status: "Dikembalikan"
+        });
+
+        const receiptData = {
+          type: "kembali",
+          nama: loanOrigin.nama || "-",
+          organisasi: loanOrigin.organisasi || "-",
+          barang: loanOrigin.barang || "-",
+          jumlah: loanOrigin.jumlah || 1,
+          tglPinjam: loanOrigin.tglPinjam || "",
+          tglKembali: tglKembaliVal,
+          keterangan: loanOrigin.keterangan || "-",
+          fotoKembali: compressedPhotoBase64
+        };
+
+        // Reset input foto & preview
+        document.getElementById('kembali-foto').value = "";
+        compressedPhotoBase64 = "";
+        document.getElementById('foto-preview-wrapper').classList.add('hidden');
+        document.getElementById('foto-preview').src = "";
+
+        tampilkanHalamanBukti(receiptData);
+      } catch (err) {
+        alert("Gagal memproses: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Konfirmasi Pengembalian";
+      }
+    });
+  </script>
+</body>
+</html>
